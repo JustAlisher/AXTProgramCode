@@ -1,7 +1,11 @@
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
 #include <HX711_ADC.h>
 #if defined(ESP8266)|| defined(ESP32) || defined(AVR)
 #include <EEPROM.h>
 #endif
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 //pins:
 const int HX711_dout = 4; //mcu > HX711 dout pin
@@ -21,6 +25,8 @@ long prev_weight = 0;
 
 void setup() {
   Serial.begin(9600); delay(10);
+  lcd.begin();
+  lcd.backlight();
   LoadCell.begin();
   
   float calibrationValue; 
@@ -31,7 +37,7 @@ void setup() {
   boolean _tare = true; //set this to false if you don't want tare to be performed in the next step
   LoadCell.start(stabilizingtime, _tare);
   if (LoadCell.getTareTimeoutFlag()) {
-    Serial.println("Timeout, check MCU>HX711 wiring and pin designations");
+    Serial.println("Проверьте подключение");
     while (1);
   }
   else {
@@ -93,13 +99,17 @@ void loop() {
         }*/
 
         if ( prev_weight == 0 ){
-          Serial.println(weight_value);    
+          Serial.println(weight_value);
+          lcd.clear();
+          lcd.print(weight_value);      
         } 
         else {
           if (prev_weight == weight_value && weight_value >= -100 && weight_value <= 50){
               LoadCell.tare();
           } else {
             Serial.println(weight_value);
+            lcd.clear();
+            lcd.print(weight_value);
           }
         }
 
@@ -108,6 +118,8 @@ void loop() {
         
       } else{
           Serial.println("ERROR!");
+          lcd.clear();
+          lcd.print("ERROR!");
         }
       
 
