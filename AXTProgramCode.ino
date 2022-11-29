@@ -6,7 +6,8 @@
 #endif
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
-
+const char BUTTON_PIN = 8;
+bool pressed = false;
 //pins:
 const int HX711_dout = 4; //mcu > HX711 dout pin
 const int HX711_sck = 5; //mcu > HX711 sck pin
@@ -28,6 +29,7 @@ void setup() {
   lcd.begin();
   lcd.backlight();
   LoadCell.begin();
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
   
   float calibrationValue; 
   
@@ -63,6 +65,14 @@ void loop() {
           LoadCell.tareNoDelay();
           if (LoadCell.getTareStatus() == true) {}
         } 
+  }
+
+  if (digitalRead(BUTTON_PIN) == pressed){
+     while(digitalRead(BUTTON_PIN) == pressed){
+      //do nothing 
+     }
+     LoadCell.tareNoDelay();
+     if (LoadCell.getTareStatus() == true) {}  
   }
   
   static boolean newDataReady = 0;
