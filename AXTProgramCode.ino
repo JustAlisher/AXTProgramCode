@@ -15,7 +15,12 @@ const int HX711_sck = 5; //mcu > HX711 sck pin
 //HX711 constructor:
 HX711_ADC LoadCell(HX711_dout, HX711_sck);
 
-const int calVal_eepromAdress = 0;
+const int calVal_eepromAddress = 0;
+const int discrete_eepromAddress = 4;
+const int max_weight_eepromAddress = 6;
+const int number_of_calibrations_eepromAddress = 10;
+const int activation_key_eepromAddress = 12;
+
 unsigned long t = 0;
 String myCmd;
 int discrete;
@@ -23,8 +28,22 @@ long max_weight;
 int remainder;
 long weight_value;
 long prev_weight = 0;
+int number_of_calibrations;
+char activation_key;
 
 void setup() {
+  //Check the key
+  EEPROM.get(activation_key_eepromAddress, activation_key);
+
+  if(activation_key!='d'){
+    EEPROM.put(calVal_eepromAddress, 1.05);
+    EEPROM.put(discrete_eepromAddress, 1);
+    EEPROM.put(max_weight_eepromAddress, 1000000);
+    EEPROM.put(number_of_calibrations_eepromAddress, 0);
+    EEPROM.put(activation_key_eepromAddress, 'd');
+  }
+
+  
   Serial.begin(9600); delay(10);
   lcd.begin();
   lcd.backlight();
@@ -33,7 +52,7 @@ void setup() {
   
   float calibrationValue; 
   
-  EEPROM.get(calVal_eepromAdress, calibrationValue); // uncomment this if you want to fetch the calibration value from eeprom
+  EEPROM.get(calVal_eepromAddress, calibrationValue); // uncomment this if you want to fetch the calibration value from eeprom
   
   unsigned long stabilizingtime = 3000; // preciscion right after power-up can be improved by adding a few seconds of stabilizing time
   boolean _tare = true; //set this to false if you don't want tare to be performed in the next step
@@ -47,9 +66,11 @@ void setup() {
   }
 
  
-  EEPROM.get(4, discrete);
+  EEPROM.get(discrete_eepromAddress, discrete);
   
-  EEPROM.get(6, max_weight);
+  EEPROM.get(max_weight_eepromAddress, max_weight);
+
+  EEPROM.get(number_of_calibrations_eepromAddress, number_of_calibrations);
   
 }
 
@@ -59,6 +80,7 @@ void loop() {
       myCmd = Serial.readStringUntil('\r');
       if (myCmd == "ghjjhg789hfk!hgfka7JHB45" ){
         Serial.println("ACCEPTED!");
+        Serial.println(number_of_calibrations);
         while (!LoadCell.update());
         calibrate();  
       } else if (myCmd == "t"){
@@ -98,16 +120,6 @@ void loop() {
         if (remainder != 0)
           weight_value = weight_value + discrete - remainder;
 
-       /* if (weight_value < 81 && weight_value > -120){
-            Serial.println(0);
-          }else{
-              Serial.println(weight_value);
-            }*/
-        /*
-        if ( weight_value <= 20 && weight_value >= -20){
-          weight_value = 0;  
-        }*/
-
         if ( prev_weight == 0 ){
           Serial.println(weight_value);
           lcd.clear();
@@ -132,17 +144,11 @@ void loop() {
           lcd.print("ERROR!");
         }
       
-
-
-      
       newDataReady = 0;
       t = millis();
     }
   }
 
-
-
-  // check if last tare operation is complete:
   
 
 }
@@ -182,17 +188,6 @@ void calibrate() {
   float newCalibrationValue = LoadCell.getNewCalibration(known_mass); //get the new calibration value
 
   _resume = false;
-/*
-#if defined(ESP8266)|| defined(ESP32)
-  EEPROM.begin(512);
-#endif
-  EEPROM.put(calVal_eepromAdress, newCalibrationValue);
-  
-#if defined(ESP8266)|| defined(ESP32)
-  EEPROM.commit();
-#endif
-  EEPROM.get(calVal_eepromAdress, newCalibrationValue); */
-
   
   Serial.println("STEP 2 COMPLETED");
  
@@ -207,10 +202,6 @@ void calibrate() {
     }
   }
   _resume = false;
-/*
-  EEPROM.put(4, discrete_c);
-
-  discrete = discrete_c; */
 
   Serial.println("STEP 3 COMPLETED");
 
@@ -225,27 +216,26 @@ void calibrate() {
     }
   }
   _resume = false;
-  /*
-  EEPROM.put(6, max_weight_c);
-
-  max_weight = max_weight_c; */
 
 
 #if defined(ESP8266)|| defined(ESP32)
   EEPROM.begin(512);
 #endif
-  EEPROM.put(calVal_eepromAdress, newCalibrationValue);
+  EEPROM.put(calVal_eepromAddress, newCalibrationValue);
   
 #if defined(ESP8266)|| defined(ESP32)
   EEPROM.commit();
 #endif
-  EEPROM.get(calVal_eepromAdress, newCalibrationValue);
+  EEPROM.get(calVal_eepromAddress, newCalibrationValue);
 
-  EEPROM.put(4, discrete_c);
+  EEPROM.put(discrete_eepromAddress, discrete_c);
   discrete = discrete_c;
 
-  EEPROM.put(6, max_weight_c);
+  EEPROM.put(max_weight_eepromAddress, max_weight_c);
   max_weight = max_weight_c;
+
+  number_of_calibrations = number_of_calibrations + 1;
+  EEPROM.put(number_of_calibrations_eepromAddress, number_of_calibrations);
   
   Serial.println("FINISH");
   
