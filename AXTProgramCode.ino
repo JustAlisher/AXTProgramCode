@@ -148,10 +148,6 @@ void loop() {
 }
 
 void calibrate() {
-  //Serial.println("Place the load cell an a level stable surface.");
-  //Serial.println("Remove any load applied to the load cell.");
-  //Serial.println("Send 't' from serial monitor to set the tare offset.");
-
   boolean _resume = false;
   String user_action;
   
@@ -159,8 +155,6 @@ void calibrate() {
     LoadCell.update();
     if (Serial.available() > 0) {
       if (Serial.available() > 0) {
-        //char inByte = Serial.read();
-        //if (inByte == 't') LoadCell.tareNoDelay();
         user_action = Serial.readStringUntil('\r');
         if (user_action == "1") LoadCell.tareNoDelay();
       }
@@ -170,9 +164,6 @@ void calibrate() {
       _resume = true;
     }
   }
-
-  //Serial.println("Now, place your known mass on the loadcell.");
-  //Serial.println("Then send the weight of this mass (i.e. 100.0) from serial monitor.");
 
   float known_mass = 0;
   _resume = false;
@@ -191,7 +182,7 @@ void calibrate() {
   float newCalibrationValue = LoadCell.getNewCalibration(known_mass); //get the new calibration value
 
   _resume = false;
-
+/*
 #if defined(ESP8266)|| defined(ESP32)
   EEPROM.begin(512);
 #endif
@@ -200,7 +191,7 @@ void calibrate() {
 #if defined(ESP8266)|| defined(ESP32)
   EEPROM.commit();
 #endif
-  EEPROM.get(calVal_eepromAdress, newCalibrationValue);
+  EEPROM.get(calVal_eepromAdress, newCalibrationValue); */
 
   
   Serial.println("STEP 2 COMPLETED");
@@ -216,10 +207,10 @@ void calibrate() {
     }
   }
   _resume = false;
-
+/*
   EEPROM.put(4, discrete_c);
 
-  discrete = discrete_c;
+  discrete = discrete_c; */
 
   Serial.println("STEP 3 COMPLETED");
 
@@ -234,11 +225,28 @@ void calibrate() {
     }
   }
   _resume = false;
-
+  /*
   EEPROM.put(6, max_weight_c);
 
-  max_weight = max_weight_c;
+  max_weight = max_weight_c; */
 
+
+#if defined(ESP8266)|| defined(ESP32)
+  EEPROM.begin(512);
+#endif
+  EEPROM.put(calVal_eepromAdress, newCalibrationValue);
+  
+#if defined(ESP8266)|| defined(ESP32)
+  EEPROM.commit();
+#endif
+  EEPROM.get(calVal_eepromAdress, newCalibrationValue);
+
+  EEPROM.put(4, discrete_c);
+  discrete = discrete_c;
+
+  EEPROM.put(6, max_weight_c);
+  max_weight = max_weight_c;
+  
   Serial.println("FINISH");
   
 
