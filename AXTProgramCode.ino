@@ -58,7 +58,9 @@ void setup() {
   boolean _tare = true; //set this to false if you don't want tare to be performed in the next step
   LoadCell.start(stabilizingtime, _tare);
   if (LoadCell.getTareTimeoutFlag()) {
-    Serial.println("Проверьте подключение");
+    Serial.println("2222222");
+    lcd.clear();
+    lcd.print("Проверьте подключение проводов");
     while (1);
   }
   else {
@@ -139,7 +141,7 @@ void loop() {
         
         
       } else{
-          Serial.println("ERROR!");
+          Serial.println("11111111");
           lcd.clear();
           lcd.print("ERROR!");
         }
