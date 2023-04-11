@@ -141,7 +141,7 @@ void loop() {
         
         
       } else{
-          Serial.println("11111111");
+          Serial.println("1111111");
           lcd.clear();
           lcd.print("ERROR!");
         }
